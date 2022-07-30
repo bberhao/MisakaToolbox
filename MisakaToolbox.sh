@@ -1,7 +1,7 @@
 #!/bin/bash
 
-version="Beat20220727"
-version_log="更换为自建CDN-待测试"
+version="Beat20220730"
+version_log="尝试添加快捷方式"
 
 
 RED="\033[31m"
@@ -45,11 +45,67 @@ done
 
 about(){
     echo "#####################################################"
-    echo -e "#         ${RED}Misaka Linux Toolbox 复活版Beat${PLAIN}               #"
+    echo -e "#          ${RED}Misaka Linux Toolbox Beat  ${PLAIN}               #"
     echo -e "# ${GREEN}我的博客${PLAIN}: https://blog.imgblz.cn                  #"
     echo -e "# ${GREEN}项目地址${PLAIN}: https://github.com/imgblz/MisakaToolbox #"
-    echo -e "# ${GREEN}raw加速${PLAIN}: https://ghraw.imgblz.cn                 #"
+    echo -e "# ${GREEN}Raw加速${PLAIN}: https://ghraw.imgblz.cn                #"
     echo "#####################################################"
+}
+
+dd_vps(){
+    clear
+    echo -e "脚本来自 https://github.com/bohanyang/debi"
+    echo -e "此脚本过于精简，缺少大部分组件，请自行apt install -y <组件名称> 安装"
+    echo -e "甲骨文ARM服务器请选择 Ubuntu 20.04 或 18.04 系统模板，暂不支持 Oracle Linux"
+    echo -e "dd后你的端口为 22 账号为 root"
+    echo -e "请输入密码"
+    read -p "(默认: useradmin):" dd_password
+    [[ -z "$dd_password" ]] && dd_password="useradmin"
+    echo -e "使用中国镜像？[y/n]"
+    read -p "(默认: y):" dd_china
+    [[ -z "$dd_china" ]] && dd_china="y"
+    curl -fLO https://ghraw.imgblz.cn/bohanyang/debi/master/debi.sh 
+    chmod a+rx debi.sh
+    if [[ "$dd_china" == "y" ]]; then
+       sudo ./debi.sh --cdn --network-console --ethx --bbr --user root --dns '223.5.5.5 223.6.6.6' --mirror-protocol https --mirror-host mirrors.aliyun.com --security-repository mirror --ntp ntp.aliyun.com --password $dd_password
+    else
+       sudo ./debi.sh --cdn --network-console --ethx --bbr --user root --password $dd_password
+    fi
+    echo -e "确定无报错请输入y重启"
+    read -p "(默认: y):" dd_reboot
+    [[ -z "$dd_reboot" ]] && dd_reboot="y"
+    if [[ "$dd_reboot" == "y" ]]; then
+        sudo shutdown -r now 
+    else
+        echo -e "请截图反馈"
+    fi
+}
+
+mt(){
+    if [[ -z $(grep "alias mt='bash /root/MisakaToolbox.sh'" /etc/profile) ]]; then
+        echo "alias mt='bash /root/MisakaToolbox.sh'" >> /etc/profile
+	echo -e "请等待重启后输入mt即可运行此脚本"
+	sudo shutdown -r now
+    fi
+}
+
+aboutx(){
+    clear
+    echo -e "                 About"
+    echo -e "这个只是一个一堆脚本的合集罢了，方便搞事情，并无什么技术含量"
+    echo -e "维护这个东东只是因为我懒！！！"
+    echo -e "github反代项目都可以用，只要大家不搞事情，我就继续放这用"
+    echo -e "CDN由Cloudflare提供，国内由自建反向代理提供"
+    echo -e "我就是一个准大专生，啥都不会，脚本能用就行"
+    echo " -------------"
+    echo -e " ${GREEN}1.${PLAIN} 返回主菜单"
+    echo -e " ${GREEN}此为开发版本，不建议正式使用${PLAIN} "
+    echo ""
+    read -rp " 请输入选项:" menuInput
+    case $menuInput in
+        1) menux ;;
+        *) menux ;;
+    esac
 }
 
 check_status(){
@@ -318,6 +374,9 @@ serverstatus() {
 
 menu() {
     clear
+    echo "检查脚本快捷方式..."
+    mt
+    echo "完成"
     echo "检查更新..."
     wget -q -O /tmp/version.txt https://ghraw.imgblz.cn/imgblz/MisakaToolbox/Beat/version.txt
     if [ "$(cat /tmp/version.txt)" != "$version" ]; then
@@ -340,7 +399,7 @@ menuu(){
     echo ""
     read -rp "是否更新？[y/n]" menuNumberInput
     case "$menuNumberInput" in
-        y) wget -N --no-check-certificate https://ghraw.imgblz.cn/imgblz/MisakaToolbox/main/MisakaToolbox.sh && bash MisakaToolbox.sh ;;
+        y) wget -N --no-check-certificate https://ghraw.imgblz.cn/imgblz/MisakaToolbox/Beat/MisakaToolbox.sh && bash MisakaToolbox.sh ;;
         n) menuz ;;
         *) menuu ;;
     esac
@@ -385,6 +444,7 @@ menux(){
     echo -e " ${GREEN}4.${PLAIN} 性能测试"
     echo -e " ${GREEN}5.${PLAIN} 一键更换（dd）系统"
     echo -e " ${RED}9.${PLAIN} 回到欢迎页"
+    echo -e " ${RED}x.${PLAIN} 关于"
     echo -e " ${RED}0.${PLAIN} 退出"
     echo ""
     echo -e "${YELLOW}版本号${PLAIN}：$version"
@@ -397,6 +457,7 @@ menux(){
         4) menu4 ;;
         5) menu5 ;;
         9) menuz ;;
+        x) aboutx ;;
 	    0) exit 1 ;;
         *) menux ;;
     esac
@@ -627,16 +688,14 @@ menu5(){
     clear
     about
     echo ""
-    echo -e " ${GREEN}1.${PLAIN} 一键Debian（支持ARM）密码useradmin"
-    echo -e " ${GREEN}2.${PLAIN} 一键Debian中国源（支持ARM）密码useradmin"
-    echo -e " ${GREEN}3.${PLAIN} 一键dd脚本魔改版（cxthhhhh）"
+    echo -e " ${GREEN}1.${PLAIN} 一键Debian（bohanyang）"
+    echo -e " ${GREEN}2.${PLAIN} 一键dd脚本魔改版（cxthhhhh）"
     echo -e " ${GREEN}0.${PLAIN} 返回主菜单"
     echo ""
     read -rp " 请输入选项:" menuInput
     case $menuInput in
-        1) curl -fLO https://ghraw.imgblz.cn/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && sudo ./debi.sh --cdn --network-console --ethx --bbr --user root --password useradmin && sudo shutdown -r now ;;
-	2) curl -fLO https://ghraw.imgblz.cn/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && sudo ./debi.sh --cdn --network-console --ethx --bbr --user root --dns '223.5.5.5 223.6.6.6' --mirror-protocol https --mirror-host mirrors.aliyun.com --security-repository mirror --ntp ntp.aliyun.com --password useradmin && sudo shutdown -r now ;;
-        3) wget --no-check-certificate -qO ~/Network-Reinstall-System-Modify.sh 'https://www.cxthhhhh.com/CXT-Library/Network-Reinstall-System-Modify/Network-Reinstall-System-Modify.sh' && chmod a+x ~/Network-Reinstall-System-Modify.sh && bash ~/Network-Reinstall-System-Modify.sh -UI_Options ;;
+        1) dd_vps ;;
+        2) wget --no-check-certificate -qO ~/Network-Reinstall-System-Modify.sh 'https://www.cxthhhhh.com/CXT-Library/Network-Reinstall-System-Modify/Network-Reinstall-System-Modify.sh' && chmod a+x ~/Network-Reinstall-System-Modify.sh && bash ~/Network-Reinstall-System-Modify.sh -UI_Options ;;
         0) menux ;;
         *) menu5 ;;
     esac

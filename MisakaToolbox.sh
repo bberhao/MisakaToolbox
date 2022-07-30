@@ -83,9 +83,10 @@ dd_vps(){
 
 mt(){
     if [[ -z $(grep "alias mt='bash /root/MisakaToolbox.sh'" /etc/profile) ]]; then
+        echo -e "正在添加快捷启动方式"
         echo "alias mt='bash /root/MisakaToolbox.sh'" >> /etc/profile
-	echo -e "请等待重启后输入mt即可运行此脚本"
-	sudo shutdown -r now
+        source /etc/profile
+        echo -e "完成，您可以直接输入mt启动脚本"
     fi
 }
 

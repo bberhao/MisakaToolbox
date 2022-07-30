@@ -85,8 +85,14 @@ mt(){
     if [[ -z $(grep "alias mt='bash /root/MisakaToolbox.sh'" /etc/profile) ]]; then
         echo -e "正在添加快捷启动方式"
         echo "alias mt='bash /root/MisakaToolbox.sh'" >> /etc/profile
-        source /etc/profile
-        echo -e "完成，您可以直接输入mt启动脚本"
+        echo -e "完成，是否重启完成配置？[y/n]"
+        read -p "(默认: y):" mt_reboot
+        [[ -z "$mt_reboot" ]] && mt_reboot="y"
+        if [[ "$mt_reboot" == "y" ]]; then
+            sudo shutdown -r now
+        else
+            echo -e "您可能需要重启才能使用快捷方式"
+        fi
     fi
 }
 
